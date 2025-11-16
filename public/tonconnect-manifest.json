@@ -1,0 +1,9 @@
+{
+  "url": "https://raw.githubusercontent.com/Heeral03/loyalty-layer-manifest/refs/heads/main/tonconnect-manifest.json",
+  "name": "Loyalty Layer",
+  "iconUrl": "https://raw.githubusercontent.com/Heeral03/loyalty-layer-manifest/refs/heads/main/icon.png",
+  "termsOfUseUrl": "https://raw.githubusercontent.com/Heeral03/loyalty-layer-manifest/refs/heads/main/terms",
+  "privacyPolicyUrl": "https://raw.githubusercontent.com/Heeral03/loyalty-layer-manifest/refs/heads/main/privacy",
+  "description": "Loyalty Layer Dapp on TON Blockchain",
+  "categories": ["finance", "loyalty"]
+}
