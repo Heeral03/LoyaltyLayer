@@ -1,0 +1,335 @@
+#include "imports/stdlib.fc";
+
+() init() impure {
+    ;; Global stats + Fixed individual tracking (max 10 customers for demo)
+    cell data = begin_cell()
+        .store_uint(0, 64)                    ;; total_customers
+        .store_uint(0, 64)                    ;; total_points (global)
+        .store_uint(0, 64)                    ;; total_transactions
+        .store_uint(0, 64)                    ;; total_volume_low
+        .store_uint(0, 64)                    ;; total_volume_high
+        .store_uint(0, 64)                    ;; total_tips_given
+        .store_uint(0, 32)                    ;; business_tier
+        .store_uint(0, 1)                     ;; is_verified
+        
+        ;; Individual customer data (fixed slots)
+        .store_uint(0, 64)                    ;; customer1_points
+        .store_uint(0, 32)                    ;; customer1_transactions
+        .store_uint(0, 64)                    ;; customer1_volume
+        .store_uint(0, 8)                     ;; customer1_tier
+        .store_uint(0, 256)                   ;; customer1_address
+        
+        .store_uint(0, 64)                    ;; customer2_points
+        .store_uint(0, 32)                    ;; customer2_transactions
+        .store_uint(0, 64)                    ;; customer2_volume
+        .store_uint(0, 8)                     ;; customer2_tier
+        .store_uint(0, 256)                   ;; customer2_address
+        
+        .store_uint(0, 64)                    ;; customer3_points
+        .store_uint(0, 32)                    ;; customer3_transactions
+        .store_uint(0, 64)                    ;; customer3_volume
+        .store_uint(0, 8)                     ;; customer3_tier
+        .store_uint(0, 256)                   ;; customer3_address
+        .end_cell();
+    set_data(data);
+}
+
+() recv_internal(int msg_value, cell in_msg, slice in_msg_body) impure {
+    if (in_msg_body.slice_empty?()) { 
+        accept_message();
+        return (); 
+    }
+
+    ;; Read current data
+    slice ds = get_data().begin_parse();
+    int total_customers = ds~load_uint(64);
+    int total_points = ds~load_uint(64);
+    int total_transactions = ds~load_uint(64);
+    int volume_low = ds~load_uint(64);
+    int volume_high = ds~load_uint(64);
+    int total_tips_given = ds~load_uint(64);
+    int business_tier = ds~load_uint(32);
+    int is_verified = ds~load_uint(1);
+    
+    ;; Individual customer data
+    int cust1_points = ds~load_uint(64);
+    int cust1_transactions = ds~load_uint(32);
+    int cust1_volume = ds~load_uint(64);
+    int cust1_tier = ds~load_uint(8);
+    int cust1_address = ds~load_uint(256);
+    
+    int cust2_points = ds~load_uint(64);
+    int cust2_transactions = ds~load_uint(32);
+    int cust2_volume = ds~load_uint(64);
+    int cust2_tier = ds~load_uint(8);
+    int cust2_address = ds~load_uint(256);
+    
+    int cust3_points = ds~load_uint(64);
+    int cust3_transactions = ds~load_uint(32);
+    int cust3_volume = ds~load_uint(64);
+    int cust3_tier = ds~load_uint(8);
+    int cust3_address = ds~load_uint(256);
+    
+    ds.end_parse();
+
+    int op = in_msg_body~load_uint(32);
+    slice customer_addr = in_msg_body~load_msg_addr();
+    int customer_key = customer_addr.preload_uint(256);
+
+    ;; Find customer slot
+    int customer_found = 0;
+    int customer_slot = 0;
+    
+    ;; Check slot 1
+    if (cust1_address == customer_key) {
+        customer_found = 1;
+        customer_slot = 1;
+    }
+    
+    ;; Check slot 2  
+    if (cust2_address == customer_key) {
+        customer_found = 1;
+        customer_slot = 2;
+    }
+    
+    ;; Check slot 3
+    if (cust3_address == customer_key) {
+        customer_found = 1;
+        customer_slot = 3;
+    }
+
+    ;; Current customer data
+    int customer_points = 0;
+    int customer_transactions = 0;
+    int customer_volume = 0;
+    int customer_tier = 0;
+    
+    if (customer_slot == 1) {
+        customer_points = cust1_points;
+        customer_transactions = cust1_transactions;
+        customer_volume = cust1_volume;
+        customer_tier = cust1_tier;
+    } elseif (customer_slot == 2) {
+        customer_points = cust2_points;
+        customer_transactions = cust2_transactions;
+        customer_volume = cust2_volume;
+        customer_tier = cust2_tier;
+    } elseif (customer_slot == 3) {
+        customer_points = cust3_points;
+        customer_transactions = cust3_transactions;
+        customer_volume = cust3_volume;
+        customer_tier = cust3_tier;
+    }
+
+    if (op == 1) { 
+        ;; Register customer - INDIVIDUAL TRACKING
+        if (customer_found == 0) { ;; New customer
+            total_customers += 1;
+            
+            ;; Find empty slot
+            if (cust1_address == 0) {
+                customer_slot = 1;
+                cust1_address = customer_key;
+            } elseif (cust2_address == 0) {
+                customer_slot = 2;
+                cust2_address = customer_key;
+            } elseif (cust3_address == 0) {
+                customer_slot = 3;
+                cust3_address = customer_key;
+            }
+        }
+        
+        ;; Welcome points based on business tier
+        int welcome_points = 100;
+        if (business_tier == 1) { welcome_points = 200; }
+        if (business_tier == 2) { welcome_points = 500; }
+        
+        customer_points += welcome_points;
+        total_points += welcome_points;
+    }
+    elseif (op == 2) { 
+        ;; Purchase - INDIVIDUAL TRACKING
+        int purchase_nanotons = msg_value;
+        total_transactions += 1;
+        customer_transactions += 1;
+        
+        ;; Calculate points (10% of TON amount)
+        int points_earned = purchase_nanotons / 100000000;
+        customer_points += points_earned;
+        total_points += points_earned;
+        
+        ;; Update volume
+        customer_volume += purchase_nanotons;
+        int new_volume_low = volume_low + purchase_nanotons;
+        int carry = new_volume_low < volume_low ? 1 : 0;
+        volume_low = new_volume_low;
+        volume_high = volume_high + carry;
+    }
+    elseif (op == 3) { 
+        ;; Check-in with streak - INDIVIDUAL
+        int daily_points = 10;
+        int streak_days = in_msg_body~load_uint(8);
+        if (streak_days >= 7) { daily_points = 25; }
+        if (streak_days >= 30) { daily_points = 50; }
+        
+        customer_points += daily_points;
+        total_points += daily_points;
+    }
+    elseif (op == 5) { 
+        ;; Redeem reward - INDIVIDUAL
+        int reward_points = in_msg_body~load_uint(64);
+        if (customer_points >= reward_points) {
+            customer_points -= reward_points;
+            total_points -= reward_points;
+        }
+    }
+    elseif (op == 7) {
+        ;; Tip - INDIVIDUAL
+        int tip_nanotons = msg_value;
+        total_tips_given += 1;
+        
+        ;; Tip bonus points
+        int business_match = tip_nanotons / 1000000000;
+        customer_points += business_match;
+        total_points += business_match;
+    }
+    elseif (op == 8) {
+        ;; Business tier upgrade
+        int new_tier = in_msg_body~load_uint(32);
+        if (new_tier <= 2) {
+            business_tier = new_tier;
+        }
+    }
+    elseif (op == 9) {
+        ;; Get customer data - READ ONLY
+        accept_message();
+        return ();
+    }
+
+    ;; Update customer data in their slot
+    if (customer_slot == 1) {
+        cust1_points = customer_points;
+        cust1_transactions = customer_transactions;
+        cust1_volume = customer_volume;
+        cust1_tier = customer_tier;
+    } elseif (customer_slot == 2) {
+        cust2_points = customer_points;
+        cust2_transactions = customer_transactions;
+        cust2_volume = customer_volume;
+        cust2_tier = customer_tier;
+    } elseif (customer_slot == 3) {
+        cust3_points = customer_points;
+        cust3_transactions = customer_transactions;
+        cust3_volume = customer_volume;
+        cust3_tier = customer_tier;
+    }
+
+    ;; Save updated data back to storage
+    set_data(begin_cell()
+        .store_uint(total_customers, 64)
+        .store_uint(total_points, 64)
+        .store_uint(total_transactions, 64)
+        .store_uint(volume_low, 64)
+        .store_uint(volume_high, 64)
+        .store_uint(total_tips_given, 64)
+        .store_uint(business_tier, 32)
+        .store_uint(is_verified, 1)
+        
+        ;; Individual customer data
+        .store_uint(cust1_points, 64)
+        .store_uint(cust1_transactions, 32)
+        .store_uint(cust1_volume, 64)
+        .store_uint(cust1_tier, 8)
+        .store_uint(cust1_address, 256)
+        
+        .store_uint(cust2_points, 64)
+        .store_uint(cust2_transactions, 32)
+        .store_uint(cust2_volume, 64)
+        .store_uint(cust2_tier, 8)
+        .store_uint(cust2_address, 256)
+        
+        .store_uint(cust3_points, 64)
+        .store_uint(cust3_transactions, 32)
+        .store_uint(cust3_volume, 64)
+        .store_uint(cust3_tier, 8)
+        .store_uint(cust3_address, 256)
+        .end_cell());
+    
+    accept_message();
+}
+
+;; Helper function to get customer data - SIMPLE SLICE RETURN
+slice get_customer_data(slice customer_addr) method_id {
+    slice ds = get_data().begin_parse();
+    
+    ;; Skip global stats
+    ds~load_uint(64); ;; total_customers
+    ds~load_uint(64); ;; total_points
+    ds~load_uint(64); ;; total_transactions
+    ds~load_uint(64); ;; volume_low
+    ds~load_uint(64); ;; volume_high
+    ds~load_uint(64); ;; total_tips_given
+    ds~load_uint(32); ;; business_tier
+    ds~load_uint(1);  ;; is_verified
+    
+    ;; Individual customer data
+    int cust1_points = ds~load_uint(64);
+    int cust1_transactions = ds~load_uint(32);
+    int cust1_volume = ds~load_uint(64);
+    int cust1_tier = ds~load_uint(8);
+    int cust1_address = ds~load_uint(256);
+    
+    int cust2_points = ds~load_uint(64);
+    int cust2_transactions = ds~load_uint(32);
+    int cust2_volume = ds~load_uint(64);
+    int cust2_tier = ds~load_uint(8);
+    int cust2_address = ds~load_uint(256);
+    
+    int cust3_points = ds~load_uint(64);
+    int cust3_transactions = ds~load_uint(32);
+    int cust3_volume = ds~load_uint(64);
+    int cust3_tier = ds~load_uint(8);
+    int cust3_address = ds~load_uint(256);
+    
+    ds.end_parse();
+
+    int customer_key = customer_addr.preload_uint(256);
+    
+    ;; Find and return customer data as slice
+    if (cust1_address == customer_key) {
+        return begin_cell()
+            .store_uint(cust1_points, 64)
+            .store_uint(cust1_transactions, 32)
+            .store_uint(cust1_volume, 64)
+            .store_uint(cust1_tier, 8)
+            .store_uint(1, 1)  ;; found flag
+            .end_cell().begin_parse();
+    }
+    if (cust2_address == customer_key) {
+        return begin_cell()
+            .store_uint(cust2_points, 64)
+            .store_uint(cust2_transactions, 32)
+            .store_uint(cust2_volume, 64)
+            .store_uint(cust2_tier, 8)
+            .store_uint(1, 1)  ;; found flag
+            .end_cell().begin_parse();
+    }
+    if (cust3_address == customer_key) {
+        return begin_cell()
+            .store_uint(cust3_points, 64)
+            .store_uint(cust3_transactions, 32)
+            .store_uint(cust3_volume, 64)
+            .store_uint(cust3_tier, 8)
+            .store_uint(1, 1)  ;; found flag
+            .end_cell().begin_parse();
+    }
+    
+    ;; Customer not found
+    return begin_cell()
+        .store_uint(0, 64)  ;; points
+        .store_uint(0, 32)  ;; transactions
+        .store_uint(0, 64)  ;; volume
+        .store_uint(0, 8)   ;; tier
+        .store_uint(0, 1)   ;; found flag
+        .end_cell().begin_parse();
+}
