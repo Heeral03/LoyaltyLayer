@@ -1,29 +1,29 @@
-import { Address, beginCell, Cell, Contract, contractAddress, ContractProvider, Sender, SendMode } from '@ton/core';
-
-export type CustomerLoyaltyConfig = {};
-
-export function customerLoyaltyConfigToCell(config: CustomerLoyaltyConfig): Cell {
-    return beginCell().endCell();
-}
+import { Address, Cell, Contract, ContractProvider } from "ton-core";
 
 export class CustomerLoyalty implements Contract {
-    constructor(readonly address: Address, readonly init?: { code: Cell; data: Cell }) {}
+  constructor(
+    readonly address: Address,
+    readonly init?: { code: Cell; data: Cell }
+  ) {}
 
-    static createFromAddress(address: Address) {
-        return new CustomerLoyalty(address);
-    }
+  static createFromAddress(address: Address) {
+    return new CustomerLoyalty(address);
+  }
 
-    static createFromConfig(config: CustomerLoyaltyConfig, code: Cell, workchain = 0) {
-        const data = customerLoyaltyConfigToCell(config);
-        const init = { code, data };
-        return new CustomerLoyalty(contractAddress(workchain, init), init);
-    }
-
-    async sendDeploy(provider: ContractProvider, via: Sender, value: bigint) {
-        await provider.internal(via, {
-            value,
-            sendMode: SendMode.PAY_GAS_SEPARATELY,
-            body: beginCell().endCell(),
-        });
-    }
+  async getCustomerData(provider: ContractProvider, customerAddress: Address) {
+    const result = await provider.get('get_customer_data', [
+      {
+        type: 'slice',
+        cell: new Cell().asBuilder().storeAddress(customerAddress).endCell()
+      }
+    ]);
+    
+    return {
+      points: result.stack.readNumber(),
+      transactions: result.stack.readNumber(),
+      volume: result.stack.readNumber(),
+      tier: result.stack.readNumber(),
+      found: result.stack.readBoolean()
+    };
+  }
 }

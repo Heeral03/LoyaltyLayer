@@ -1,29 +1,50 @@
 import { Address, beginCell, Cell, Contract, contractAddress, ContractProvider, Sender, SendMode } from '@ton/core';
 
-export type BusinessConfig = {};
+export type BusinessContractConfig = {
+    owner: Address;
+    businessName: string;
+    businessId: bigint;
+};
 
-export function businessConfigToCell(config: BusinessConfig): Cell {
-    return beginCell().endCell();
+export function businessContractConfigToCell(config: BusinessContractConfig): Cell {
+    const businessNameCell = beginCell()
+        .storeBuffer(Buffer.from(config.businessName))
+        .endCell();
+
+    return beginCell()
+        .storeAddress(config.owner)
+        .storeRef(businessNameCell)
+        .storeUint(config.businessId, 64)
+        .storeUint(0, 64) // total_customers
+        .storeUint(0, 64) // total_volume
+        .endCell();
 }
 
-export class Business implements Contract {
-    constructor(readonly address: Address, readonly init?: { code: Cell; data: Cell }) {}
+export class BusinessContract implements Contract {
+    constructor(
+        readonly address: Address,
+        readonly init?: { code: Cell; data: Cell }
+    ) {}
 
     static createFromAddress(address: Address) {
-        return new Business(address);
+        return new BusinessContract(address);
     }
 
-    static createFromConfig(config: BusinessConfig, code: Cell, workchain = 0) {
-        const data = businessConfigToCell(config);
+    static createFromConfig(config: BusinessContractConfig, code: Cell, workchain = 0) {
+        const data = businessContractConfigToCell(config);
         const init = { code, data };
-        return new Business(contractAddress(workchain, init), init);
+        return new BusinessContract(contractAddress(workchain, init), init);
     }
 
-    async sendDeploy(provider: ContractProvider, via: Sender, value: bigint) {
-        await provider.internal(via, {
-            value,
-            sendMode: SendMode.PAY_GAS_SEPARATELY,
-            body: beginCell().endCell(),
-        });
+    async getBusinessData(provider: ContractProvider) {
+        const result = await provider.get('get_business_data', []);
+        
+        return {
+            owner: result.stack.readAddress(),
+            businessName: result.stack.readString(),
+            businessId: result.stack.readBigNumber(),
+            totalCustomers: result.stack.readBigNumber(),
+            totalVolume: result.stack.readBigNumber(),
+        };
     }
 }
