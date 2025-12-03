@@ -1,46 +1,126 @@
-# Getting Started with Create React App
+# Loyalty Layer — Decentralized Loyalty + Tipping System on TON
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A Telegram-native micro-loyalty infrastructure for real-world businesses.
 
-## Available Scripts
+## Overview
 
-In the project directory, you can run:
+Loyalty Layer is a Telegram Mini App powered by TON smart contracts that enables small shops, cafés, salons, and local businesses to launch instant, programmable loyalty programs — with zero setup, zero staff training, and no separate app downloads.
 
-### `npm start`
+Customers earn on-chain, verifiable, portable loyalty points simply by scanning a QR and paying/tipping through TON.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+This project won 2nd Runner-Up at The Open Hack 2025, during India Blockchain Week, Bengaluru.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+# Key Features
+## For Businesses
 
-### `npm test`
+- No app installs, no dashboards — runs directly inside Telegram
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Instant onboarding: register → connect TON wallet → get loyalty QR
 
-### `npm run build`
+- On-chain transparency: all points, tips, redemption events are verifiable
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- Ideal for micro-merchants (kirana stores, cafés, salons, canteens)
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## For Customers
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- Scan QR → auto-join → earn points instantly
 
-### `npm run eject`
+- Keep your points forever: uninstalling apps doesn’t wipe rewards
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+- Fully portable points — designed to support cross-shop/mall networks
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- Real-time balance updates through TON blockchain
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## Powered by TON
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+- Ultra-low fees → micro-rewards like ₹5–₹50 become viable
 
-## Learn More
+- Real-time settlement
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- Native Telegram integration via Mini Apps + TonConnect
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- Scales to UPI-level usage
+
+# Tech Stack
+## Frontend
+
+- React 18
+
+- TypeScript
+
+- @telegram-apps/sdk, @twa-dev/sdk
+
+- TonConnect UI
+
+- qrcode.react
+
+## Backend
+
+- Node.js + Express
+
+- TON SDK (@ton/core, @ton/ton)
+
+- Ngrok for secure tunneling during development
+
+## Smart Contracts (Func)
+
+- Factory.fc — Deploys business-specific loyalty contracts
+
+- Business.fc — Stores business metadata
+
+- CustomerLoyalty.fc — Manages on-chain points, tips, and transactions
+
+## Tools
+
+- TON Blueprint
+
+- Local Sandbox
+
+- Jest + RTL
+
+- VS Code + GitHub
+# Demo
+
+https://www.youtube.com/shorts/FK1VcxxlbPo
+
+# Why This Matters
+
+## Most loyalty systems today are still Web2:
+
+- Every brand has its own app, its own points, and its own wallet
+
+- Small shops can’t afford loyalty infra, dashboards, or training
+
+- Points are stored in centralized databases → easy to lose, hard to verify
+
+- Nothing is portable — one café point can’t work at another café
+
+This creates a loyalty system that feels fake, expensive, and fragmented.
+
+
+
+## How Loyalty Layer Solves It (Powered by TON + Telegram)
+
+###  On-Chain Ownership
+- Points live on TON smart contracts — not on a private server.
+- Customers truly own their rewards, even if apps change or businesses switch systems.
+
+### Transparent & Trustless
+Every reward, tip, and redemption is recorded on-chain.
+No fake points, no backend manipulation.
+
+### Ultra-Cheap Micro Rewards
+- TON fees are almost zero (fractions of a paisa).
+### Built Inside Telegram
+- No new app.
+- Users open a mini app in Telegram, scan a QR, connect wallet → done.
+- Fits naturally into how people already interact with shops and communities.
+
+### Scales Like UPI
+- TON can handle massive throughput, so thousands of merchants in a city can run rewards without breaking the system.
+
+# 🏆Achievement
+
+- 2nd Runner-Up — The Open Hack 2025 (TON × Telegram Mini Apps)
+- Awarded during India Blockchain Week, Bangalore.
+- Prize: $500 + TON ecosystem mentorship and support.
