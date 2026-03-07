@@ -3,7 +3,7 @@ import { TonConnectButton } from '@tonconnect/ui-react';
 import { useTonConnect } from '../hooks/useTonConnect';
 import { useFactory } from '../hooks/useFactory';
 import { useTonClient } from '../hooks/useTonClient';
-import { Business } from '../../../blockchain/wrappers/Business';
+import { Business } from '../Business';
 import { Address, toNano } from '@ton/core';
 import React from 'react';
 import QRCode from 'react-qr-code';
