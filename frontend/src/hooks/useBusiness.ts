@@ -1,6 +1,6 @@
 import { useTonClient } from './useTonClient';
 import { useTonConnect } from './useTonConnect';
-import { Business } from '../../../blockchain/wrappers/Business';
+import { Business } from '../Business';
 import { Address, toNano } from '@ton/core';
 
 export function useBusiness(businessAddress: string | null) {
