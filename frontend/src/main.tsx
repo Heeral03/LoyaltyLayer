@@ -1,5 +1,6 @@
+// This MUST be the very first thing before any other imports
 import { Buffer } from 'buffer';
-(window as any).Buffer = Buffer;
+window.Buffer = Buffer;
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
