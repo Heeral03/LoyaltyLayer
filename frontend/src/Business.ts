@@ -82,11 +82,13 @@ export function businessConfigToCell(config: BusinessConfig): Cell {
 // ─── Wrapper class ────────────────────────────────────────────────────────────
 
 export class Business implements Contract {
-    constructor(
-        readonly address: Address,
-        readonly init?: { code: Cell; data: Cell },
-    ) {}
+address: Address;
+init?: { code: Cell; data: Cell };
 
+constructor(address: Address, init?: { code: Cell; data: Cell }) {
+    this.address = address;
+    this.init = init;
+}
     static createForDeploy(code: Cell, config: BusinessConfig): Business {
         const data = businessConfigToCell(config);
         const init = { code, data };

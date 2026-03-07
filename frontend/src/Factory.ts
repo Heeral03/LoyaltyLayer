@@ -66,10 +66,13 @@ export function factoryConfigToCell(config: FactoryConfig): Cell {
 
 // ─── Wrapper class ────────────────────────────────────────────────────────────
 export class Factory implements Contract {
-    constructor(
-        readonly address: Address,
-        readonly init?: { code: Cell; data: Cell },
-    ) {}
+address: Address;
+init?: { code: Cell; data: Cell };
+
+constructor(address: Address, init?: { code: Cell; data: Cell }) {
+    this.address = address;
+    this.init = init;
+}
 
     // Create a brand-new Factory instance (for deployment)
     static createForDeploy(code: Cell, businessCode: Cell): Factory {

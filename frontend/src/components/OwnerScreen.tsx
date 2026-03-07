@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { TonConnectButton } from '@tonconnect/ui-react';
 import { useTonConnect } from '../hooks/useTonConnect';
 import { useFactory } from '../hooks/useFactory';

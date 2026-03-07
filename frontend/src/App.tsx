@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
-import { SDKProvider, useLaunchParams, useBackButton, useMiniApp } from '@telegram-apps/sdk-react';
 import { TON_CONNECT_MANIFEST_URL } from './constants';
 import LandingScreen  from './components/LandingScreen';
 import MerchantScreen from './components/MerchantScreen';
@@ -9,45 +8,36 @@ import OwnerScreen    from './components/OwnerScreen';
 
 export type Screen = 'landing' | 'merchant' | 'customer' | 'owner';
 
-// ─── Inner app — needs to be inside SDKProvider to use SDK hooks ──────────────
-function AppInner() {
-    const [screen, setScreen]         = useState<Screen>('landing');
-    const [bizAddress, setBizAddress] = useState<string | null>(null);
+// Read Telegram start param once at module load time (before React renders)
+const tg = window.Telegram?.WebApp;
+const startParam = tg?.initDataUnsafe?.start_param;
+const initialScreen: Screen = startParam?.startsWith('EQ') ? 'customer' : 'landing';
+const initialBizAddress: string | null = startParam?.startsWith('EQ') ? startParam : null;
 
-    // Telegram SDK hooks
-    const miniApp    = useMiniApp();
-    const backButton = useBackButton();
-    const lp         = useLaunchParams();
+export default function App() {
+    const [screen, setScreen]         = useState<Screen>(initialScreen);
+    const [bizAddress, setBizAddress] = useState<string | null>(initialBizAddress);
 
-    // 1. Tell Telegram the app is ready (removes loading spinner)
-    // 2. Expand to full screen
+    // Init Telegram (no setState here)
     useEffect(() => {
-        miniApp.ready();
-        miniApp.expand();
+        if (!tg) return;
+        tg.ready();
+        tg.expand();
     }, []);
 
-    // Handle QR deep link: ?startapp=EQ_CONTRACT_ADDRESS
-    // Customer scans shop QR → Telegram opens app → lands on that shop's dashboard
+    // Wire back button
     useEffect(() => {
-        const startParam = lp.startParam;
-        if (startParam && startParam.startsWith('EQ')) {
-            setBizAddress(startParam);
-            setScreen('customer');
-        }
-    }, []);
-
-    // Wire Telegram's native back button to screen state
-    useEffect(() => {
+        if (!tg) return;
         if (screen === 'landing') {
-            backButton.hide();
+            tg.BackButton.hide();
         } else {
-            backButton.show();
+            tg.BackButton.show();
             const handler = () => {
                 setBizAddress(null);
                 setScreen('landing');
             };
-            backButton.on('click', handler);
-            return () => backButton.off('click', handler);
+            tg.BackButton.onClick(handler);
+            return () => tg.BackButton.offClick(handler);
         }
     }, [screen]);
 
@@ -57,40 +47,22 @@ function AppInner() {
     };
 
     return (
-        <div style={{
-            maxWidth: 480,
-            margin: '0 auto',
-            minHeight: '100vh',
-            background: '#0f0f1a',
-            color: '#fff',
-            fontFamily: 'sans-serif',
-        }}>
-            {screen === 'landing' && (
-                <LandingScreen onNavigate={setScreen} />
-            )}
-            {screen === 'merchant' && (
-                <MerchantScreen onBack={goHome} />
-            )}
-            {screen === 'customer' && (
-                <CustomerScreen
-                    businessAddress={bizAddress}
-                    onBack={goHome}
-                />
-            )}
-            {screen === 'owner' && (
-                <OwnerScreen onBack={goHome} />
-            )}
-        </div>
-    );
-}
-
-// ─── Root — SDKProvider must wrap everything that uses SDK hooks ──────────────
-export default function App() {
-    return (
-        <SDKProvider acceptCustomStyles debug>
-            <TonConnectUIProvider manifestUrl={TON_CONNECT_MANIFEST_URL}>
-                <AppInner />
-            </TonConnectUIProvider>
-        </SDKProvider>
+        <TonConnectUIProvider manifestUrl={TON_CONNECT_MANIFEST_URL}>
+            <div style={{
+                maxWidth: 480,
+                margin: '0 auto',
+                minHeight: '100vh',
+                background: '#0f0f1a',
+                color: '#fff',
+                fontFamily: 'sans-serif',
+            }}>
+                {screen === 'landing' && <LandingScreen onNavigate={setScreen} />}
+                {screen === 'merchant' && <MerchantScreen onBack={goHome} />}
+                {screen === 'customer' && (
+                    <CustomerScreen businessAddress={bizAddress} onBack={goHome} />
+                )}
+                {screen === 'owner' && <OwnerScreen onBack={goHome} />}
+            </div>
+        </TonConnectUIProvider>
     );
 }
