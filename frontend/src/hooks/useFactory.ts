@@ -1,6 +1,6 @@
 import { useTonClient } from './useTonClient';
 import { useTonConnect } from './useTonConnect';
-import { Factory, calculateBusinessAddress } from '../../../blockchain/wrappers/Factory';
+import { Factory, calculateBusinessAddress } from '../Factory';
 import { Address, Cell, toNano } from '@ton/core';
 import { FACTORY_ADDRESS, BUSINESS_CODE_HEX } from '../constants';
 

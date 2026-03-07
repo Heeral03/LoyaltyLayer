@@ -2,11 +2,10 @@ import {
     Address,
     beginCell,
     Cell,
-    Contract,
+    type Contract,
     contractAddress,
-    ContractProvider,
-    Sender,
-    SendMode,
+    type ContractProvider,
+    type Sender,
     toNano,
 } from '@ton/core';
 
@@ -21,6 +20,34 @@ export type FactoryConfig = {
     totalCount:   bigint;
     businessCode: Cell;
 };
+export function calculateBusinessAddress(
+    businessCode: Cell,
+    ownerAddress: Address,
+    businessName: string,
+    businessId: bigint,
+): Address {
+    // Normalize to ensure consistent serialization
+    const normalizedOwner = Address.parseRaw(ownerAddress.toRawString());
+    
+    const nameCell = beginCell()
+        .storeStringTail(businessName)
+        .endCell();
+
+    const businessData = beginCell()
+        .storeAddress(normalizedOwner)
+        .storeRef(nameCell)
+        .storeUint(businessId, 64)
+        .storeUint(0, 64)
+        .storeUint(0, 64)
+        .storeDict(null)
+        .endCell();
+
+    const stateInit = { code: businessCode, data: businessData };
+    return contractAddress(0, stateInit);
+}
+
+
+
 
 export type DeployBusinessParams = {
     ownerAddress:  Address;
@@ -96,7 +123,6 @@ async getNextId(provider: ContractProvider): Promise<bigint> {
     const result = await provider.get('getNextId', []);
     return result.stack.readBigNumber();
 }
-
 
     // ── Deploy ────────────────────────────────────────────────────────────────
 
