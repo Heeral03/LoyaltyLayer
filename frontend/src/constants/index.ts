@@ -1,4 +1,4 @@
-export const FACTORY_ADDRESS = 'EQCpW3NF-soxsnGasWfombz_IYeu2cF51mBeud5KVTegpZnv';
+export const FACTORY_ADDRESS = 'EQCpcneye62EXvXYRrbVjjS0BgHMHd9BqTfzJ_gyH1causDN';
 export const IS_TESTNET = true;
 export const TON_CONNECT_MANIFEST_URL = 'https://loyalty-layer-su38.vercel.app/tonconnect-manifest.json';
 // ADD THIS:

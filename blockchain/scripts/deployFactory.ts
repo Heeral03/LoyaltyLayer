@@ -7,26 +7,20 @@ export async function run(provider: NetworkProvider) {
     const businessCode = await compile('Business');
     console.log('BUSINESS_CODE_HEX:', businessCode.toBoc().toString('hex'));
 
+  
     const factory = provider.open(
         Factory.createForDeploy(factoryCode, businessCode)
     );
 
-    // Check if already deployed
-    if (await provider.isContractDeployed(factory.address)) {
-        console.log('Factory already deployed at:', factory.address.toString());
-        return;
-    }
+    console.log('Deploying NEW Factory at:', factory.address.toString());
 
-    console.log('Deploying Factory to:', factory.address.toString());
-
-    await factory.sendDeploy(provider.sender(), 50000000n); // 0.05 TON
+    // Force deploy even if exists — send TON to initialize
+    await factory.sendDeploy(provider.sender(), 50000000n);
 
     await provider.waitForDeploy(factory.address);
 
-    console.log('✅ Factory deployed at:', factory.address.toString());
-    console.log('Save this address — you will need it for the frontend!');
-
-    // Verify getters work
+    console.log('✅ New Factory address:', factory.address.toString());
+    
     const total  = await factory.getTotalBusinesses();
     const nextId = await factory.getNextId();
     console.log('Total businesses:', total.toString());
